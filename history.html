@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack — Transaction History</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body data-page="history">
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="assets/logo.svg" alt="FinTrack" class="brand-logo">
+            <span>FinTrack</span>
+        </div>
+        <ul class="sidebar-nav">
+            <li><a href="index.html" class="nav-link"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></li>
+            <li><a href="add-expense.html" class="nav-link"><i class="bi bi-plus-circle-fill"></i><span>Add Transaction</span></a></li>
+            <li><a href="history.html" class="nav-link active"><i class="bi bi-clock-history"></i><span>History</span></a></li>
+            <li><a href="reports.html" class="nav-link"><i class="bi bi-bar-chart-line-fill"></i><span>Reports</span></a></li>
+            <li><a href="budget.html" class="nav-link"><i class="bi bi-piggy-bank-fill"></i><span>Budget</span></a></li>
+            <li><a href="export.html" class="nav-link"><i class="bi bi-download"></i><span>Export</span></a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="sidebar-footer-row">
+                <button class="btn-currency" id="currencyBtn" title="Change currency">
+                    <i class="bi bi-search"></i>
+                    <span id="currencyBtnLabel">₹ INR</span>
+                </button>
+                <button class="btn-theme" id="themeToggle" title="Toggle theme">
+                    <i class="bi bi-moon-stars-fill"></i>
+                </button>
+            </div>
+            <div class="currency-popup" id="currencyPopup">
+                <div class="currency-popup-search">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="currencySearchInput" placeholder="Search currency..." autocomplete="off">
+                </div>
+                <ul class="currency-list" id="currencyList"></ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Top Bar -->
+    <div class="mobile-topbar d-md-none">
+        <button class="btn-menu" id="menuToggle"><i class="bi bi-list"></i></button>
+        <span class="brand-text"><img src="assets/logo.svg" alt="FinTrack" class="brand-logo-sm"> FinTrack</span>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <section id="history" class="content-section active">
+            <div class="section-header">
+                <h2>Transaction History</h2>
+                <div class="filter-bar">
+                    <select id="filterCategory" class="form-input filter-select">
+                        <option value="all">All Categories</option>
+                    </select>
+                    <select id="filterType" class="form-input filter-select">
+                        <option value="all">All Types</option>
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                    <input type="month" id="filterMonth" class="form-input filter-select">
+                </div>
+            </div>
+            <div class="panel">
+                <table class="tx-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Note</th>
+                            <th>Amount</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr><td colspan="5" class="empty-state">No transactions found.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Edit Transaction Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h4><i class="bi bi-pencil-square"></i> Edit Transaction</h4>
+                <button class="modal-close" id="editModalClose"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form id="editForm" autocomplete="off">
+                <input type="hidden" id="editId">
+                <div class="edit-type-toggle">
+                    <button type="button" class="edit-type-btn active" data-type="expense" id="editBtnExpense">
+                        <i class="bi bi-arrow-up-circle"></i> Expense
+                    </button>
+                    <button type="button" class="edit-type-btn" data-type="income" id="editBtnIncome">
+                        <i class="bi bi-arrow-down-circle"></i> Income
+                    </button>
+                </div>
+                <input type="hidden" id="editType" value="expense">
+                <div class="form-group">
+                    <label for="editAmount" id="editAmountLabel">Amount</label>
+                    <input type="number" id="editAmount" class="form-input" placeholder="0.00" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCategory">Category</label>
+                    <select id="editCategory" class="form-input" required>
+                        <option value="">Select category</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editDate">Date</label>
+                    <input type="date" id="editDate" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="editNote">Note</label>
+                    <input type="text" id="editNote" class="form-input" placeholder="Short description" maxlength="100">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="editCancelBtn">Cancel</button>
+                    <button type="submit" class="btn-save"><i class="bi bi-check-lg"></i> Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-box modal-sm">
+            <div class="modal-header">
+                <h4><i class="bi bi-exclamation-triangle-fill" style="color:var(--red)"></i> Delete Transaction</h4>
+                <button class="modal-close" id="deleteModalClose"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <p class="modal-body-text">Are you sure you want to delete this transaction? This action cannot be undone.</p>
+            <div class="delete-preview" id="deletePreview"></div>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="deleteCancelBtn">Cancel</button>
+                <button class="btn-danger" id="deleteConfirmBtn"><i class="bi bi-trash3"></i> Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/expense.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
