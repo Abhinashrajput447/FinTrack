@@ -6,10 +6,11 @@
     <title>FinTrack — Export Report</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
     <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
     <link rel="stylesheet" href="css/dashboard.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body data-page="export">
 
@@ -145,6 +146,22 @@
     <script src="js/expense.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/export.js"></script>
+    
+    <!-- Library verification -->
+    <script>
+        window.addEventListener('load', function() {
+            if (window.jsPDF) {
+                console.log('✓ jsPDF library loaded successfully');
+            } else {
+                console.error('✗ jsPDF library NOT loaded - PDF download will not work');
+            }
+            if (window.jspdf && window.jspdf.jsPDF) {
+                window.jsPDF = window.jspdf.jsPDF;
+                console.log('✓ jsPDF found under window.jspdf.jsPDF');
+            }
+        });
+    </script>
+    
     <script src="js/app.js"></script>
 </body>
 </html>

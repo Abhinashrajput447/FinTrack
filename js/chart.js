@@ -24,6 +24,17 @@ const Charts = {
         return getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#e5e7eb';
     },
 
+    getCategoryColors(count) {
+        if (count <= this.colors.length) return this.colors.slice(0, count);
+
+        const generated = [];
+        for (let i = 0; i < count; i++) {
+            const hue = Math.round((i * 360) / count);
+            generated.push(`hsl(${hue}, 72%, 52%)`);
+        }
+        return generated;
+    },
+
     renderWeeklyChart(days, amounts) {
         const ctx = this.getCtx('weeklyChart');
         if (!ctx) return;
@@ -57,8 +68,47 @@ const Charts = {
         if (!ctx) return;
         this.destroy('categoryChart');
 
-        const labels = Object.keys(categoryTotals);
-        const data = Object.values(categoryTotals);
+        const sorted = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
+        const total = sorted.reduce((sum, [, amount]) => sum + amount, 0);
+        const maxSlices = 5;
+        const minShare = 0.08; // 8% minimum share to get own slice
+
+        const major = [];
+        const minor = [];
+
+        sorted.forEach((entry, idx) => {
+            const share = total > 0 ? entry[1] / total : 0;
+            if (idx < maxSlices && share >= minShare) major.push(entry);
+            else minor.push(entry);
+        });
+
+        let labels = major.map(([name]) => name);
+        let data = major.map(([, amount]) => amount);
+
+        if (minor.length > 0) {
+            const otherTotal = minor.reduce((sum, [, amount]) => sum + amount, 0);
+            labels.push('Other');
+            data.push(otherTotal);
+        }
+
+        // Keep at least one slice if everything is tiny.
+        if (labels.length === 0 && sorted.length > 0) {
+            labels = [sorted[0][0], 'Other'];
+            data = [sorted[0][1], sorted.slice(1).reduce((sum, [, amount]) => sum + amount, 0)];
+            if (data[1] === 0) {
+                labels = [sorted[0][0]];
+                data = [sorted[0][1]];
+            }
+        }
+
+        if (labels.length === 0) {
+            labels = ['No expenses this month'];
+            data = [1];
+        }
+
+        const palette = labels[0] === 'No expenses this month'
+            ? ['#94a3b8']
+            : this.getCategoryColors(labels.length);
 
         this.instances['categoryChart'] = new Chart(ctx, {
             type: 'doughnut',
@@ -66,7 +116,7 @@ const Charts = {
                 labels,
                 datasets: [{
                     data,
-                    backgroundColor: this.colors.slice(0, labels.length),
+                    backgroundColor: palette,
                     borderWidth: 0,
                     hoverOffset: 6,
                 }]
@@ -75,7 +125,17 @@ const Charts = {
                 responsive: true,
                 cutout: '65%',
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: this.getTextColor(), padding: 16, usePointStyle: true, pointStyleWidth: 10 } },
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: this.getTextColor(),
+                            padding: 12,
+                            usePointStyle: true,
+                            pointStyleWidth: 9,
+                            boxWidth: 8,
+                            font: { size: 12 },
+                        }
+                    },
                 }
             }
         });
@@ -116,15 +176,15 @@ const Charts = {
         const data = sorted.map(s => s[1]);
 
         this.instances['topCategoriesChart'] = new Chart(ctx, {
-            type: 'polarArea',
+            type: 'doughnut',
             data: {
                 labels,
-                datasets: [{ data, backgroundColor: this.colors.slice(0, labels.length).map(c => c + 'cc'), borderWidth: 0 }]
+                datasets: [{ data, backgroundColor: this.colors.slice(0, labels.length), borderWidth: 0, hoverOffset: 6 }]
             },
             options: {
                 responsive: true,
-                plugins: { legend: { position: 'bottom', labels: { color: this.getTextColor(), padding: 12, usePointStyle: true, pointStyleWidth: 10 } } },
-                scales: { r: { display: false } }
+                cutout: '60%',
+                plugins: { legend: { position: 'bottom', labels: { color: this.getTextColor(), padding: 16, usePointStyle: true, pointStyleWidth: 10 } } }
             }
         });
     },

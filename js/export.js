@@ -46,6 +46,7 @@ const ExportReport = {
 
     renderPreview() {
         const txs = this.getFilteredTransactions();
+        const allTxs = Finance.getAll(); // Get ALL transactions for summary
         const tbody = document.getElementById('exportTableBody');
         const countEl = document.getElementById('exportCount');
         const btnCSV = document.getElementById('btnExportCSV');
@@ -53,8 +54,8 @@ const ExportReport = {
 
         countEl.textContent = txs.length + ' transaction' + (txs.length !== 1 ? 's' : '');
 
-        // Summary
-        const totals = Finance.getTotals(txs);
+        // Summary - Show totals for ALL transactions, not just filtered
+        const totals = Finance.getTotals(allTxs);
         document.getElementById('exportIncome').textContent = UI.formatCurrency(totals.income);
         document.getElementById('exportExpense').textContent = UI.formatCurrency(totals.expense);
         document.getElementById('exportBalance').textContent = UI.formatCurrency(totals.balance);
@@ -97,8 +98,9 @@ const ExportReport = {
             (t.type === 'income' ? '' : '-') + t.amount.toFixed(2),
         ]);
 
-        // Add summary rows
-        const totals = Finance.getTotals(txs);
+        // Add summary rows - Use ALL transactions for totals, not just filtered
+        const allTxs = Finance.getAll();
+        const totals = Finance.getTotals(allTxs);
         rows.push([]);
         rows.push(['', '', '', 'Total Income', totals.income.toFixed(2)]);
         rows.push(['', '', '', 'Total Expenses', '-' + totals.expense.toFixed(2)]);
@@ -127,12 +129,53 @@ const ExportReport = {
         const txs = this.getFilteredTransactions();
         if (txs.length === 0) return;
 
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
-        const symbol = UI.getCurrencySymbol();
+        // Check for jsPDF in different namespaces
+        const getjsPDF = () => {
+            if (window.jsPDF) return window.jsPDF;
+            if (window.jspdf && window.jspdf.jsPDF) return window.jspdf.jsPDF;
+            return null;
+        };
+
+        let retryCount = 0;
+        const maxRetries = 3;
+        
+        const checkAndGenerate = () => {
+            const jsPDFLib = getjsPDF();
+            if (!jsPDFLib) {
+                retryCount++;
+                if (retryCount <= maxRetries) {
+                    console.warn('jsPDF not found, retrying... (' + retryCount + '/' + maxRetries + ')');
+                    setTimeout(checkAndGenerate, 800);
+                } else {
+                    console.error('jsPDF library failed to load after ' + maxRetries + ' retries');
+                    UI.showToast('PDF library not available. Please refresh the page and try again.', 'error');
+                }
+                return;
+            }
+
+            // Make jsPDF globally available for generatePDF
+            window.jsPDF = jsPDFLib;
+            
+            try {
+                this.generatePDF(txs);
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                UI.showToast('Error generating PDF: ' + (error.message || 'Unknown error'), 'error');
+            }
+        };
+
+        // Check immediately, don't wait on first try
+        checkAndGenerate();
+    },
+
+    generatePDF(txs) {
+        const doc = new window.jsPDF('p', 'mm', 'a4');
         const monthVal = document.getElementById('exportMonth').value;
         const categoryVal = document.getElementById('exportCategory').value;
-        const totals = Finance.getTotals(txs);
+        
+        // Calculate totals from ALL transactions for summary, not just filtered
+        const allTxs = Finance.getAll();
+        const totals = Finance.getTotals(allTxs);
 
         // Title
         doc.setFontSize(20);
@@ -171,11 +214,17 @@ const ExportReport = {
 
         doc.setFontSize(11);
         doc.setTextColor(16, 185, 129);
-        doc.text(symbol + totals.income.toLocaleString(), 24, 54);
+        doc.text(UI.formatCurrency(totals.income), 24, 54);
         doc.setTextColor(239, 68, 68);
-        doc.text(symbol + totals.expense.toLocaleString(), 84, 54);
+        doc.text(UI.formatCurrency(totals.expense), 84, 54);
         doc.setTextColor(79, 70, 229);
-        doc.text(symbol + totals.balance.toLocaleString(), 148, 54);
+        doc.text(UI.formatCurrency(totals.balance), 148, 54);
+
+        // Helper to format amount for table
+        const formatTableAmount = (type, amount) => {
+            const formatted = UI.formatCurrency(amount);
+            return (type === 'income' ? '+' : '-') + formatted;
+        };
 
         // Table
         const tableData = txs.map(t => [
@@ -183,7 +232,7 @@ const ExportReport = {
             t.type.charAt(0).toUpperCase() + t.type.slice(1),
             t.category,
             (t.note || '—').substring(0, 30),
-            (t.type === 'income' ? '+' : '-') + symbol + t.amount.toLocaleString(),
+            formatTableAmount(t.type, t.amount),
         ]);
 
         doc.autoTable({

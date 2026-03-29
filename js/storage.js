@@ -5,6 +5,7 @@ const Storage = {
         BUDGETS: 'fintrack_budgets',
         THEME: 'fintrack_theme',
         CURRENCY: 'fintrack_currency',
+        CUSTOM_CATEGORIES: 'fintrack_custom_categories',
     },
 
     getTransactions() {
@@ -69,5 +70,29 @@ const Storage = {
         if (this.getTransactions().length === 0 && sampleTransactions.length > 0) {
             this.saveTransactions(sampleTransactions);
         }
+    },
+
+    // Custom Categories Management
+    getCustomCategories() {
+        const data = localStorage.getItem(this.KEYS.CUSTOM_CATEGORIES);
+        return data ? JSON.parse(data) : { expense: [], income: [] };
+    },
+
+    saveCustomCategories(categories) {
+        localStorage.setItem(this.KEYS.CUSTOM_CATEGORIES, JSON.stringify(categories));
+    },
+
+    addCustomCategory(type, categoryName) {
+        if (!categoryName || !categoryName.trim()) return false;
+        
+        const categories = this.getCustomCategories();
+        const sanitized = categoryName.trim().substring(0, 30);
+        
+        if (!categories[type]) categories[type] = [];
+        if (categories[type].includes(sanitized)) return false; // Already exists
+        
+        categories[type].push(sanitized);
+        this.saveCustomCategories(categories);
+        return true;
     }
 };

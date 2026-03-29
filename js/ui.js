@@ -214,11 +214,14 @@ const UI = {
         const select = document.getElementById('txCategory');
         if (!select) return;
         const cats = CATEGORIES[type] || [];
+        const allCats = [...cats];
+        
         select.innerHTML = '<option value="">Select category</option>' +
-            cats.map(c => {
-                const icon = CATEGORY_ICONS[c] || 'bi-three-dots';
-                return `<option value="${c}">${c}</option>`;
-            }).join('');
+            allCats.map(c => {
+                const icon = CATEGORY_ICONS[c] || '⋯';
+                return `<option value="${c}">${icon} ${c}</option>`;
+            }).join('') +
+            '<option value="__add_custom__" style="font-weight: bold; color: #6366f1;">+ Add Custom Category</option>';
     },
 
     populateFilterCategories() {

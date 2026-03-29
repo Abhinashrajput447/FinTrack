@@ -16,7 +16,11 @@
             UI.setCurrentDate();
             const weekly = Finance.getLast7DaysData(txs);
             Charts.renderWeeklyChart(weekly.days, weekly.amounts);
-            Charts.renderCategoryChart(Finance.getCategoryTotals(txs, 'expense'));
+
+            // Category breakdown should reflect current month expenses only.
+            const now = new Date();
+            const currentMonthTxs = Finance.getMonthTransactions(txs, now.getFullYear(), now.getMonth());
+            Charts.renderCategoryChart(Finance.getCategoryTotals(currentMonthTxs, 'expense'));
         }
 
         if (PAGE === 'history') {
@@ -24,6 +28,11 @@
         }
 
         if (PAGE === 'reports') {
+            const currentDate = new Date();
+            const monthName = currentDate.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+            const periodEl = document.getElementById('reportsPeriod');
+            if (periodEl) periodEl.textContent = 'Period: ' + monthName;
+
             const monthly = Finance.getMonthlyData(txs);
             Charts.renderMonthlyCompare(monthly.labels, monthly.income, monthly.expense);
             Charts.renderTopCategories(Finance.getCategoryTotals(txs, 'expense'));
@@ -76,9 +85,34 @@
                 txTypeButtons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 document.getElementById('txType').value = btn.dataset.type;
+
+                const txCat = document.getElementById('txCategory');
+                const txCustomCat = document.getElementById('txCustomCategory');
+                if (txCat) txCat.style.display = 'block';
+                if (txCustomCat) {
+                    txCustomCat.style.display = 'none';
+                    txCustomCat.value = '';
+                }
+
                 UI.populateCategoryDropdown(btn.dataset.type);
             });
         });
+
+        // Handle category dropdown change
+        const txCategorySelect = document.getElementById('txCategory');
+        if (txCategorySelect) {
+            txCategorySelect.addEventListener('change', function() {
+                const customInput = document.getElementById('txCustomCategory');
+                if (this.value === '__add_custom__') {
+                    this.value = '';
+                    this.style.display = 'none';
+                    if (customInput) {
+                        customInput.style.display = 'block';
+                        customInput.focus();
+                    }
+                }
+            });
+        }
 
         const txForm = document.getElementById('transactionForm');
         if (txForm) {
@@ -86,20 +120,39 @@
                 e.preventDefault();
                 const type = document.getElementById('txType').value;
                 const amount = document.getElementById('txAmount').value;
-                const category = document.getElementById('txCategory').value;
+                let category = document.getElementById('txCategory').value;
+                const customCategory = document.getElementById('txCustomCategory').value;
                 const date = document.getElementById('txDate').value;
                 const note = document.getElementById('txNote').value;
 
-                if (!amount || !category || !date) {
-                    UI.showToast('Please fill all required fields.', 'error');
+                // Use custom category if provided, otherwise use dropdown selection
+                if (customCategory && customCategory.trim()) {
+                    category = customCategory.trim();
+                }
+
+                // Validate: amount, date are required, and category (either dropdown or custom)
+                if (!amount || !date || (!category && !customCategory)) {
+                    UI.showToast('Please fill all required fields (select or create a category).', 'error');
                     return;
                 }
 
                 try {
                     Finance.add(type, amount, category, date, note);
                     UI.showToast('Transaction added successfully!', 'success');
+                    
+                        // Reset form and UI
                     this.reset();
                     document.getElementById('txType').value = 'expense';
+                    
+                        // Reset category section - hide custom input, show dropdown
+                        const txCat = document.getElementById('txCategory');
+                        const txCustomCat = document.getElementById('txCustomCategory');
+                        if (txCat) txCat.style.display = 'block';
+                        if (txCustomCat) {
+                            txCustomCat.style.display = 'none';
+                            txCustomCat.value = '';
+                        }
+                    
                     txTypeButtons.forEach(b => b.classList.remove('active'));
                     if (txTypeButtons[0]) txTypeButtons[0].classList.add('active');
                     UI.populateCategoryDropdown('expense');

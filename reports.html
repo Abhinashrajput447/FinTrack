@@ -56,11 +56,20 @@
     <main class="main-content" id="mainContent">
         <section id="reports" class="content-section active">
             <div class="section-header">
-                <h2>Reports</h2>
+                <div class="reports-header-group">
+                    <h2>Reports</h2>
+                    <p class="reports-period" id="reportsPeriod">Period: —</p>
+                </div>
             </div>
             <div class="charts-row">
                 <div class="chart-card full-width">
-                    <h5>Monthly Income vs Expenses</h5>
+                    <div class="chart-header">
+                        <h5>Monthly Income vs Expenses</h5>
+                        <div class="chart-legend">
+                            <span class="legend-item"><span class="legend-color" style="background: rgba(16, 185, 129, 0.7);"></span> Income</span>
+                            <span class="legend-item"><span class="legend-color" style="background: rgba(239, 68, 68, 0.7);"></span> Expense</span>
+                        </div>
+                    </div>
                     <canvas id="monthlyCompareChart"></canvas>
                 </div>
             </div>
