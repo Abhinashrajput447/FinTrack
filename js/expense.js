@@ -43,8 +43,30 @@ const Finance = {
         return Storage.getTransactions();
     },
 
+    canAffordExpense(amount, excludeId = null) {
+        const amt = Number(amount);
+        if (!Number.isFinite(amt) || amt <= 0) return false;
+
+        let txs = this.getAll();
+        if (excludeId) {
+            txs = txs.filter(t => t.id !== excludeId);
+        }
+
+        const balance = this.getTotals(txs).balance;
+        return amt <= balance;
+    },
+
     add(type, amount, category, date, note) {
-        return Storage.addTransaction({ type, amount: Number(amount), category, date, note: note || '' });
+        const amt = Number(amount);
+        if (!Number.isFinite(amt) || amt <= 0) {
+            throw new Error('Please enter a valid amount greater than 0.');
+        }
+
+        if (type === 'expense' && !this.canAffordExpense(amt)) {
+            throw new Error('Your balance is not enough for this expense.');
+        }
+
+        return Storage.addTransaction({ type, amount: amt, category, date, note: note || '' });
     },
 
     remove(id) {
@@ -52,7 +74,16 @@ const Finance = {
     },
 
     update(id, type, amount, category, date, note) {
-        Storage.updateTransaction(id, { type, amount: Number(amount), category, date, note: note || '' });
+        const amt = Number(amount);
+        if (!Number.isFinite(amt) || amt <= 0) {
+            throw new Error('Please enter a valid amount greater than 0.');
+        }
+
+        if (type === 'expense' && !this.canAffordExpense(amt, id)) {
+            throw new Error('Your balance is not enough for this expense.');
+        }
+
+        Storage.updateTransaction(id, { type, amount: amt, category, date, note: note || '' });
     },
 
     getTotals(transactions) {

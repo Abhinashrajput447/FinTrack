@@ -65,9 +65,36 @@ const UI = {
         return this.getCurrencyInfo().symbol;
     },
 
+    formatIndianCompact(amount) {
+        const rounded = Math.round(amount);
+        const crore = Math.floor(rounded / 10000000);
+        const lakh = Math.floor((rounded % 10000000) / 100000);
+        const thousand = Math.floor((rounded % 100000) / 1000);
+        const rest = rounded % 1000;
+
+        const parts = [];
+        if (crore > 0) parts.push(crore + 'Cr');
+        if (lakh > 0) parts.push(lakh + 'L');
+        if (thousand > 0) parts.push(thousand + 'K');
+        if (rest > 0) parts.push(rest.toString());
+
+        return parts.join(' ');
+    },
+
     formatCurrency(amount) {
         const info = this.getCurrencyInfo();
-        return info.symbol + Number(amount).toLocaleString(info.locale);
+        const num = Number(amount);
+        if (!Number.isFinite(num)) return info.symbol + '0';
+
+        const sign = num < 0 ? '-' : '';
+        const abs = Math.abs(num);
+
+        // Show compact Indian format for large INR amounts.
+        if (Storage.getCurrency() === 'INR' && abs >= 10000000) {
+            return sign + info.symbol + this.formatIndianCompact(abs);
+        }
+
+        return sign + info.symbol + abs.toLocaleString(info.locale);
     },
 
     formatDate(dateStr) {

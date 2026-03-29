@@ -90,15 +90,22 @@
                 const date = document.getElementById('txDate').value;
                 const note = document.getElementById('txNote').value;
 
-                if (!amount || !category || !date) return;
+                if (!amount || !category || !date) {
+                    UI.showToast('Please fill all required fields.', 'error');
+                    return;
+                }
 
-                Finance.add(type, amount, category, date, note);
-                UI.showToast('Transaction added successfully!', 'success');
-                this.reset();
-                document.getElementById('txType').value = 'expense';
-                txTypeButtons.forEach(b => b.classList.remove('active'));
-                if (txTypeButtons[0]) txTypeButtons[0].classList.add('active');
-                UI.populateCategoryDropdown('expense');
+                try {
+                    Finance.add(type, amount, category, date, note);
+                    UI.showToast('Transaction added successfully!', 'success');
+                    this.reset();
+                    document.getElementById('txType').value = 'expense';
+                    txTypeButtons.forEach(b => b.classList.remove('active'));
+                    if (txTypeButtons[0]) txTypeButtons[0].classList.add('active');
+                    UI.populateCategoryDropdown('expense');
+                } catch (err) {
+                    UI.showToast(err.message || 'Unable to add transaction.', 'error');
+                }
             });
         }
 
@@ -210,12 +217,19 @@
             const date = document.getElementById('editDate').value;
             const note = document.getElementById('editNote').value;
 
-            if (!amount || !category || !date) return;
+            if (!amount || !category || !date) {
+                UI.showToast('Please fill all required fields.', 'error');
+                return;
+            }
 
-            Finance.update(id, type, amount, category, date, note);
-            UI.showToast('Transaction updated successfully!', 'info');
-            closeEditModal();
-            refreshAll();
+            try {
+                Finance.update(id, type, amount, category, date, note);
+                UI.showToast('Transaction updated successfully!', 'info');
+                closeEditModal();
+                refreshAll();
+            } catch (err) {
+                UI.showToast(err.message || 'Unable to update transaction.', 'error');
+            }
         });
     }
 

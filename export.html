@@ -55,54 +55,85 @@
 
     <!-- Main Content -->
     <main class="main-content" id="mainContent">
-        <section id="export" class="content-section active">
-            <div class="section-header">
+        <section id="export" class="content-section active export-page">
+            <div class="export-title-wrap">
                 <h2>Export Report</h2>
             </div>
-            <div class="panel export-panel">
+
+            <div class="export-shell">
                 <div class="export-filters">
-                    <div class="form-group">
-                        <label for="exportMonth">Month</label>
-                        <input type="month" id="exportMonth" class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <label for="exportType">Type</label>
-                        <select id="exportType" class="form-input">
-                            <option value="all">All</option>
-                            <option value="expense">Expense</option>
-                            <option value="income">Income</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="exportCategory">Category</label>
-                        <select id="exportCategory" class="form-input">
-                            <option value="all">All Categories</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="export-summary">
-                    <div class="export-stat income"><span class="stat-label">Income</span><span class="stat-value" id="exportIncome">₹0</span></div>
-                    <div class="export-stat expense"><span class="stat-label">Expenses</span><span class="stat-value" id="exportExpense">₹0</span></div>
-                    <div class="export-stat balance"><span class="stat-label">Balance</span><span class="stat-value" id="exportBalance">₹0</span></div>
-                </div>
-                <div class="export-preview">
-                    <div class="preview-header">
-                        <span id="exportCount">0 transactions</span>
-                        <div class="export-btns">
-                            <button class="btn-export csv" id="btnExportCSV" disabled><i class="bi bi-filetype-csv"></i> CSV</button>
-                            <button class="btn-export pdf" id="btnExportPDF" disabled><i class="bi bi-filetype-pdf"></i> PDF</button>
+                    <div class="export-filter-item">
+                        <label for="exportMonth">MONTH</label>
+                        <div class="export-input-wrap">
+                            <input type="month" id="exportMonth" class="form-input export-input">
                         </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="export-table">
-                            <thead>
-                                <tr><th>Date</th><th>Type</th><th>Category</th><th>Note</th><th>Amount</th></tr>
-                            </thead>
-                            <tbody id="exportTableBody">
-                                <tr><td colspan="5" class="empty-state">No transactions found for selected filters.</td></tr>
-                            </tbody>
-                        </table>
+
+                    <div class="export-filter-item">
+                        <label for="exportType">TYPE</label>
+                        <div class="export-input-wrap">
+                            <select id="exportType" class="form-input export-input">
+                                <option value="all">All</option>
+                                <option value="expense">Expense</option>
+                                <option value="income">Income</option>
+                            </select>
+                        </div>
                     </div>
+
+                    <div class="export-filter-item">
+                        <label for="exportCategory">CATEGORY</label>
+                        <div class="export-input-wrap">
+                            <select id="exportCategory" class="form-input export-input">
+                                <option value="all">All Categories</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-summary-strip">
+                    <div class="export-summary-item">
+                        <span class="export-summary-title">Income</span>
+                        <span class="export-summary-value income" id="exportIncome">₹0</span>
+                        <span class="export-summary-sub">Total Income</span>
+                    </div>
+                    <div class="export-summary-item">
+                        <span class="export-summary-title">Expenses</span>
+                        <span class="export-summary-value expense" id="exportExpense">₹0</span>
+                        <span class="export-summary-sub">Total Expenses</span>
+                    </div>
+                    <div class="export-summary-item">
+                        <span class="export-summary-title">Balance</span>
+                        <span class="export-summary-value balance" id="exportBalance">₹0</span>
+                        <span class="export-summary-sub">Net Balance</span>
+                    </div>
+                </div>
+
+                <div class="export-toolbar">
+                    <span id="exportCount" class="export-count-text">0 transactions</span>
+                    <div class="export-action-card">
+                        <span class="export-action-label">Export As</span>
+                        <div class="export-btns">
+                            <button class="btn-export btn-csv" id="btnExportCSV" disabled><i class="bi bi-filetype-csv"></i> CSV</button>
+                            <button class="btn-export btn-pdf" id="btnExportPDF" disabled><i class="bi bi-filetype-pdf"></i> PDF</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-table-wrap">
+                    <table class="export-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Category</th>
+                                <th>Note</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="exportTableBody">
+                            <tr><td colspan="5" class="empty-state">No transactions found for selected filters.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </section>
